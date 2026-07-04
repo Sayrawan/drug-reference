@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PharmWatch — Anesthesia Drug Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-deep:#0A1210;
+  --bg-panel:#101B18;
+  --bg-card:#132420;
+  --bg-card-hover:#16302A;
+  --line:#1F3733;
+  --line-soft:#182C28;
+  --text-primary:#E7F2ED;
+  --text-muted:#7FA096;
+  --text-dim:#4E6B62;
+  --green:#35D07F;
+  --cyan:#38C7D6;
+  --amber:#EAC15A;
+  --red:#E45B4E;
+  --violet:#B490E8;
+  --blue:#5FA6E0;
+  --coral:#E38A66;
+  --grey:#9AA8A2;
+  --font-mono:'IBM Plex Mono', monospace;
+  --font-sans:'IBM Plex Sans', sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg-deep);color:var(--text-primary);font-family:var(--font-sans);}
+body{
+  background-image:
+    radial-gradient(ellipse at 20% -10%, rgba(53,208,127,0.06), transparent 45%),
+    radial-gradient(ellipse at 90% 10%, rgba(95,166,224,0.05), transparent 40%);
+}
+::selection{background:var(--green);color:#04140F;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:var(--bg-deep);}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+
+header.topbar{
+  position:sticky;top:0;z-index:50;
+  background:linear-gradient(180deg, var(--bg-panel) 0%, rgba(16,27,24,0.97) 100%);
+  border-bottom:1px solid var(--line);
+  backdrop-filter:blur(6px);
+}
+.topbar-inner{
+  max-width:1280px;margin:0 auto;padding:14px 20px;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-pulse{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(53,208,127,0.6);animation:pulse 2s infinite;}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(53,208,127,0.55);}
+  70%{box-shadow:0 0 0 8px rgba(53,208,127,0);}
+  100%{box-shadow:0 0 0 0 rgba(53,208,127,0);}
+}
+.brand-text{font-family:var(--font-mono);font-weight:600;letter-spacing:0.5px;font-size:15px;}
+.brand-text span{color:var(--text-muted);font-weight:400;}
+.brand-sub{font-family:var(--font-mono);font-size:10.5px;color:var(--text-dim);letter-spacing:1.2px;text-transform:uppercase;margin-top:1px;}
+
+.search-wrap{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:9px 12px;}
+.search-wrap svg{flex-shrink:0;color:var(--text-dim);}
+#search{
+  flex:1;background:transparent;border:none;outline:none;color:var(--text-primary);
+  font-family:var(--font-sans);font-size:14px;
+}
+#search::placeholder{color:var(--text-dim);}
+
+.view-toggle{display:flex;gap:6px;background:var(--bg-card);border:1px solid var(--line);border-radius:8px;padding:3px;}
+.view-toggle button{
+  background:transparent;border:none;color:var(--text-muted);font-family:var(--font-mono);
+  font-size:11.5px;letter-spacing:0.4px;padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .15s;
+}
+.view-toggle button.active{background:var(--green);color:#04140F;font-weight:600;}
+
+.channels{
+  max-width:1280px;margin:0 auto;padding:14px 20px 0;
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+.channel-btn{
+  display:flex;align-items:center;gap:8px;
+  background:var(--bg-card);border:1px solid var(--line);border-radius:20px;
+  padding:7px 14px 7px 10px;cursor:pointer;transition:all .15s;
+  font-family:var(--font-mono);font-size:12px;color:var(--text-muted);
+}
+.channel-btn .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.channel-btn:hover{border-color:var(--text-dim);color:var(--text-primary);}
+.channel-btn.active{border-color:currentColor;color:var(--text-primary);background:var(--bg-card-hover);}
+.channel-count{color:var(--text-dim);font-size:10.5px;}
+
+main{max-width:1280px;margin:0 auto;padding:18px 20px 80px;}
+.section-label{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--text-dim);margin:22px 0 10px;padding-left:2px;
+}
+.grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(300px,1fr));gap:12px;}
+
+.card{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:10px;
+  padding:14px 16px 15px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;
+}
+.card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,var(--green));}
+.card:hover{background:var(--bg-card-hover);border-color:var(--line-soft);transform:translateY(-1px);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+.card-name{font-size:16px;font-weight:600;color:var(--text-primary);}
+.card-class{font-family:var(--font-mono);font-size:10px;color:var(--accent,var(--green));text-transform:uppercase;letter-spacing:0.6px;margin-top:2px;}
+.badge-row{display:flex;gap:5px;flex-shrink:0;}
+.badge{font-family:var(--font-mono);font-size:9.5px;padding:2px 6px;border-radius:4px;font-weight:600;letter-spacing:0.3px;}
+.badge.pearl{background:rgba(234,193,90,0.15);color:var(--amber);}
+.badge.alert{background:rgba(228,91,78,0.15);color:var(--red);}
+
+.pk-strip{margin:10px 0 8px;}
+.pk-track{height:6px;border-radius:3px;background:var(--bg-deep);position:relative;overflow:hidden;border:1px solid var(--line-soft);}
+.pk-onset{position:absolute;left:0;top:0;bottom:0;background:var(--line);}
+.pk-fill{position:absolute;top:0;bottom:0;background:var(--accent,var(--green));opacity:0.55;}
+.pk-labels{display:flex;justify-content:space-between;margin-top:5px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);}
+.pk-labels b{color:var(--text-muted);font-weight:500;}
+
+.card-facts{display:flex;gap:14px;margin-top:8px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);}
+.card-facts div b{display:block;color:var(--text-primary);font-size:12.5px;}
+
+.overlay{
+  position:fixed;inset:0;background:rgba(4,10,9,0.72);backdrop-filter:blur(3px);
+  display:none;align-items:flex-start;justify-content:center;z-index:100;padding:40px 16px;overflow-y:auto;
+}
+.overlay.open{display:flex;}
+.modal{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:14px;
+  max-width:680px;width:100%;padding:26px 28px 28px;position:relative;animation:rise .18s ease;
+}
+@keyframes rise{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.modal-close{
+  position:absolute;top:18px;right:18px;background:var(--bg-card);border:1px solid var(--line);
+  color:var(--text-muted);border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:16px;line-height:1;
+}
+.modal-close:hover{color:var(--text-primary);}
+.modal-header{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+.modal-dot{width:10px;height:10px;border-radius:50%;}
+.modal-name{font-size:24px;font-weight:700;}
+.modal-class{font-family:var(--font-mono);font-size:12px;text-transform:uppercase;letter-spacing:0.6px;margin:2px 0 18px;}
+
+.modal-pk{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  background:var(--bg-card);border:1px solid var(--line-soft);border-radius:10px;padding:12px 14px;margin-bottom:18px;
+}
+.modal-pk div{text-align:left;}
+.modal-pk .lbl{font-family:var(--font-mono);font-size:9.5px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;}
+.modal-pk .val{font-family:var(--font-mono);font-size:13px;color:var(--text-primary);margin-top:3px;font-weight:500;}
+
+.modal-section{margin-bottom:16px;}
+.modal-section h4{
+  font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1px;
+  color:var(--text-dim);margin:0 0 7px;
+}
+.modal-section p{margin:0;font-size:14px;line-height:1.55;color:var(--text-primary);}
+.modal-section ul{margin:0;padding-left:18px;font-size:13.5px;line-height:1.7;color:var(--text-primary);}
+.modal-section.pearl{background:rgba(234,193,90,0.08);border:1px solid rgba(234,193,90,0.25);border-radius:9px;padding:12px 14px;}
+.modal-section.pearl h4{color:var(--amber);}
+.modal-section.alert{background:rgba(228,91,78,0.08);border:1px solid rgba(228,91,78,0.3);border-radius:9px;padding:12px 14px;}
+.modal-section.alert h4{color:var(--red);}
+.modal-section.contra h4{color:var(--coral);}
+
+.compare-wrap{display:none;}
+.compare-wrap.open{display:block;}
+.compare-group{margin-bottom:28px;}
+.compare-title{font-family:var(--font-mono);font-size:13px;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:10px;}
+table.cmp{width:100%;border-collapse:collapse;font-size:13px;}
+table.cmp th{
+  text-align:left;font-family:var(--font-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;
+  color:var(--text-dim);padding:8px 10px;border-bottom:1px solid var(--line);
+}
+table.cmp td{padding:9px 10px;border-bottom:1px solid var(--line-soft);vertical-align:top;}
+table.cmp tr:nth-child(even) td{background:rgba(255,255,255,0.015);}
+table.cmp td.name{font-weight:600;color:var(--text-primary);}
+table.cmp tr:hover td{background:var(--bg-card-hover);}
+
+.empty{text-align:center;padding:60px 20px;color:var(--text-dim);font-family:var(--font-mono);font-size:13px;}
+
+footer{
+  max-width:1280px;margin:0 auto;padding:20px 20px 40px;
+  color:var(--text-dim);font-family:var(--font-mono);font-size:11px;text-align:center;
+  border-top:1px solid var(--line-soft);margin-top:20px;
+}
+
+@media (max-width:640px){
+  .modal-pk{grid-template-columns:repeat(2,1fr);}
+  .card-facts{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-pulse"></div>
+      <div>
+        <div class="brand-text">PharmWatch <span>/ anesthesia drug reference</span></div>
+        <div class="brand-sub">32 agents · 7 channels · onset → duration mapped</div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="search" type="text" placeholder="Search drug, MOA, side effect, pearl…">
+    </div>
+    <div class="view-toggle">
+      <button id="btn-cards" class="active">Cards</button>
+      <button id="btn-compare">Compare</button>
+    </div>
+  </div>
+  <div class="channels" id="channels"></div>
+</header>
+
+<main>
+  <div id="cardsView"></div>
+  <div class="compare-wrap" id="compareView"></div>
+</main>
+
+<footer>PharmWatch — built for study use only · always confirm doses against current institutional protocol and package insert</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+const CLASSES = {
+  induction:  {label:"IV Induction Agents",     color:"#35D07F"},
+  inhaled:    {label:"Inhalational Agents",     color:"#38C7D6"},
+  nmb:        {label:"Neuromuscular Blockers",  color:"#5FA6E0"},
+  opioid:     {label:"Opioids",                 color:"#B490E8"},
+  local:      {label:"Local Anesthetics",       color:"#E38A66"},
+  reversal:   {label:"Reversal Agents",         color:"#4FD9A6"},
+  adjunct:    {label:"Adjuncts",                color:"#EAC15A"}
+};
+
+const DRUGS = [
+{id:"propofol", name:"Propofol", cls:"induction",
+ moa:"Potentiates GABA-A chloride currents, producing global CNS depression. Also has intrinsic antiemetic activity.",
+ onset:"15–45 sec", peak:"~90 sec", duration:"5–10 min (single bolus)", halflife:"Context-sensitive; ~30–60 min elimination but clinical offset driven by redistribution",
+ onsetMin:0.5, durationMin:8,
+ metabolism:"Hepatic glucuronidation/hydroxylation + extrahepatic (lung) clearance — very high clearance drug",
+ dosing:[["Induction","1.5–2.5 mg/kg IV"],["TIVA maintenance","100–200 mcg/kg/min"],["Sedation","25–75 mcg/kg/min"]],
+ sideEffects:["Pain on injection","Hypotension (myocardial depression + vasodilation)","Apnea","No analgesic effect"],
+ contraindications:["Egg/soy allergy (formulation-related, traditionally cited)","Caution in hemodynamic instability"],
+ pearls:["Antiemetic — useful for PONV rescue at sub-hypnotic doses","Classic milky white emulsion appearance"],
+ alerts:["Propofol infusion syndrome (PRIS): metabolic acidosis, rhabdomyolysis, cardiac failure — risk rises with high-dose/prolonged infusion, especially in children/critical illness","Lipid emulsion supports bacterial growth — strict aseptic technique, discard open vials promptly"]},
+
+{id:"etomidate", name:"Etomidate", cls:"induction",
+ moa:"GABA-A potentiation (imidazole structure) with minimal effect on sympathetic tone.",
+ onset:"30–60 sec", peak:"~1 min", duration:"3–5 min", halflife:"~75 min",
+ onsetMin:0.75, durationMin:4,
+ metabolism:"Hepatic ester hydrolysis + plasma esterases",
+ dosing:[["Induction","0.2–0.3 mg/kg IV"]],
+ sideEffects:["Myoclonus","Pain on injection","Higher PONV incidence","No analgesia"],
+ contraindications:["Relative caution in sepsis/critical illness"],
+ pearls:["Excellent hemodynamic stability — favored in cardiac disease, hypovolemia, trauma induction"],
+ alerts:["Inhibits 11-beta-hydroxylase → adrenal suppression, even after a single dose — use cautiously in septic/critically ill patients"]},
+
+{id:"ketamine", name:"Ketamine", cls:"induction",
+ moa:"Non-competitive NMDA receptor antagonism; also interacts with opioid and monoaminergic systems — produces dissociative anesthesia.",
+ onset:"30–60 sec IV (3–5 min IM)", peak:"~1 min IV", duration:"10–15 min IV (recovery 15–30 min)", halflife:"~2–3 hr",
+ onsetMin:0.75, durationMin:12,
+ metabolism:"Hepatic → norketamine (active metabolite)",
+ dosing:[["Induction IV","1–2 mg/kg"],["Induction IM","4–6 mg/kg"],["Sub-dissociative analgesia","0.1–0.3 mg/kg"]],
+ sideEffects:["Emergence delirium/hallucinations","Hypersalivation","Sympathomimetic ↑HR/BP","Nystagmus"],
+ contraindications:["Caution in severe uncontrolled hypertension","Caution with active psychosis"],
+ pearls:["Bronchodilator — favorable in asthmatics","Preserves airway reflexes and respiratory drive","Unique among induction agents in providing analgesia"],
+ alerts:["Emergence reactions — consider benzodiazepine co-administration","Sympathomimetic effect can be dangerous if catecholamine stores are depleted (e.g., prolonged critical illness)"]},
+
+{id:"thiopental", name:"Thiopental", cls:"induction",
+ moa:"Barbiturate — potent GABA-A potentiation at the barbiturate binding site.",
+ onset:"10–30 sec", peak:"~30 sec", duration:"5–10 min (redistribution)", halflife:"~10–12 hr (terminal)",
+ onsetMin:0.3, durationMin:7,
+ metabolism:"Hepatic oxidation",
+ dosing:[["Induction","3–5 mg/kg IV"]],
+ sideEffects:["Myocardial depression","Histamine release (bronchospasm risk)"],
+ contraindications:["Acute intermittent porphyria (absolute)","Asthma (relative)"],
+ pearls:["Largely superseded by propofol; still referenced for neuroprotection/status epilepticus in some settings"],
+ alerts:["Absolute contraindication in porphyria — can precipitate a life-threatening attack"]},
+
+{id:"midazolam", name:"Midazolam", cls:"induction",
+ moa:"Benzodiazepine — potentiates GABA-A via the benzodiazepine site, producing anxiolysis and anterograde amnesia.",
+ onset:"1–2 min IV", peak:"2–3 min", duration:"15–80 min (context dependent)", halflife:"~1.5–2.5 hr",
+ onsetMin:1.5, durationMin:45,
+ metabolism:"Hepatic CYP3A4 oxidation",
+ dosing:[["Premedication","1–2 mg IV"],["Induction","0.1–0.3 mg/kg"]],
+ sideEffects:["Respiratory depression (markedly synergistic with opioids)","Mild hypotension"],
+ contraindications:["Caution in elderly (prolonged effect)","Caution with respiratory compromise"],
+ pearls:["Reliable anterograde amnesia — valuable as premedication","Reversible with flumazenil"],
+ alerts:["Synergistic respiratory depression with opioids is a leading cause of sedation-related respiratory arrest"]},
+
+{id:"sevoflurane", name:"Sevoflurane", cls:"inhaled",
+ moa:"Volatile halogenated ether; exact mechanism multifactorial (GABA-A potentiation, other ion channel effects) producing reversible unconsciousness.",
+ onset:"Fast (non-pungent, well tolerated for mask induction)", peak:"—", duration:"Continuous / titrated", halflife:"—",
+ onsetMin:1, durationMin:0, bloodGas:0.65, mac:"2.0%",
+ metabolism:"~5% hepatic; produces Compound A with CO2 absorbers and fluoride ions",
+ dosing:[["MAC","2.0%"],["Blood:gas coefficient","0.65"]],
+ sideEffects:["Minimal airway irritation","Mild myocardial depression","Rare seizure-like EEG activity at high concentration"],
+ contraindications:["Known malignant hyperthermia susceptibility"],
+ pearls:["Agent of choice for inhalational (mask) induction — pleasant smell, non-pungent, especially in pediatrics"],
+ alerts:["Compound A accumulation with low fresh-gas flows + soda lime — theoretical nephrotoxicity, clinical significance debated but caution with prolonged low-flow use"]},
+
+{id:"isoflurane", name:"Isoflurane", cls:"inhaled",
+ moa:"Volatile halogenated ether producing dose-dependent CNS depression.",
+ onset:"Intermediate (pungent — not for mask induction)", peak:"—", duration:"Continuous / titrated", halflife:"—",
+ onsetMin:2, durationMin:0, bloodGas:1.4, mac:"1.17%",
+ metabolism:"Minimal hepatic metabolism (~0.2%)",
+ dosing:[["MAC","1.17%"],["Blood:gas coefficient","1.4"]],
+ sideEffects:["Dose-dependent vasodilation and hypotension","Reflex tachycardia","Airway pungency (coughing/breath-holding if used for induction)"],
+ contraindications:["Malignant hyperthermia susceptibility"],
+ pearls:["Low cost — remains common in resource-limited settings and long cases","Historic 'coronary steal' concern largely discounted"],
+ alerts:["Pungent odor — avoid for inhalational induction due to airway irritation risk"]},
+
+{id:"desflurane", name:"Desflurane", cls:"inhaled",
+ moa:"Volatile halogenated ether; lowest blood and lipid solubility of the volatiles in routine use, giving very rapid onset/offset kinetics.",
+ onset:"Fastest offset among volatiles", peak:"—", duration:"Continuous / titrated", halflife:"—",
+ onsetMin:1, durationMin:0, bloodGas:0.42, mac:"6.0%",
+ metabolism:"Minimal hepatic metabolism (~0.02%)",
+ dosing:[["MAC","6.0%"],["Blood:gas coefficient","0.42"]],
+ sideEffects:["Airway irritation — coughing, breath-holding, laryngospasm if concentration raised rapidly","Sympathetic stimulation (tachycardia/hypertension) with rapid increases"],
+ contraindications:["Not used for inhalational induction (pungency)","Malignant hyperthermia susceptibility"],
+ pearls:["Fastest emergence — favored for obesity and long cases where rapid wake-up is desired","Requires a heated, pressurized vaporizer (boiling point ~23°C)","Highest environmental global-warming potential of the volatiles"],
+ alerts:["Rapid concentration increases can trigger airway irritation and sympathetic surge — titrate slowly, especially at induction"]},
+
+{id:"n2o", name:"Nitrous Oxide (N2O)", cls:"inhaled",
+ moa:"NMDA receptor antagonism (distinct from other volatiles, which act mainly via GABA-A).",
+ onset:"Fast", peak:"—", duration:"Continuous / titrated", halflife:"—",
+ onsetMin:1, durationMin:0, bloodGas:0.46, mac:"104% (adjunct only)",
+ metabolism:"Essentially unmetabolized, exhaled unchanged",
+ dosing:[["MAC","104% (cannot be sole agent at 1 atm)"],["Blood:gas coefficient","0.46"]],
+ sideEffects:["Diffusion hypoxia at emergence (give 100% O2)","PONV","Expansion of closed air spaces (second gas law)","B12/folate interference (methionine synthase inhibition) with prolonged/repeated exposure"],
+ contraindications:["Pneumothorax","Bowel obstruction","Middle ear or intraocular gas surgery","Suspected air embolism"],
+ pearls:["MAC-sparing — reduces requirement for other agents","Provides analgesia","Second gas effect speeds uptake of concurrently administered volatiles"],
+ alerts:["Absolutely avoid in any closed gas space (pneumothorax, recent intraocular gas, middle ear surgery, bowel obstruction) — can expand rapidly and dangerously"]},
+
+{id:"succinylcholine", name:"Succinylcholine", cls:"nmb",
+ moa:"Depolarizing nicotinic ACh receptor agonist — sustained depolarization producing a phase I block.",
+ onset:"30–60 sec (fastest)", peak:"~1 min", duration:"5–10 min", halflife:"Minutes (rapidly hydrolyzed)",
+ onsetMin:0.75, durationMin:7,
+ metabolism:"Plasma pseudocholinesterase (butyrylcholinesterase)",
+ dosing:[["Intubating dose","1–1.5 mg/kg IV"]],
+ sideEffects:["Hyperkalemia (exaggerated in burns >24h, denervation, prolonged immobilization, neuromuscular disease)","Malignant hyperthermia trigger","Bradycardia (especially repeat dosing, pediatrics)","Myalgia","↑Intraocular, intracranial, intragastric pressure","Prolonged block in pseudocholinesterase deficiency"],
+ contraindications:["Hyperkalemia-risk states (burns, crush injury, denervation, prolonged immobilization, neuromuscular disease)","Known/family history of malignant hyperthermia","Pseudocholinesterase deficiency","Penetrating eye injury (relative)"],
+ pearls:["Still the fastest-onset agent available — first choice for rapid sequence induction when sugammadex/rocuronium strategy is not preferred"],
+ alerts:["Malignant hyperthermia trigger (with volatile agents) — life-threatening emergency","Can cause lethal hyperkalemic cardiac arrest in susceptible patients"]},
+
+{id:"rocuronium", name:"Rocuronium", cls:"nmb",
+ moa:"Non-depolarizing competitive antagonist at the nicotinic ACh receptor (aminosteroid).",
+ onset:"60–90 sec (fastest non-depolarizer; approaches succinylcholine at RSI dose)", peak:"~2 min", duration:"30–60 min (intermediate)", halflife:"~1.4 hr",
+ onsetMin:1.25, durationMin:45,
+ metabolism:"Primarily hepatic/biliary excretion, unchanged",
+ dosing:[["Intubating dose","0.6 mg/kg"],["RSI dose","1.0–1.2 mg/kg"]],
+ sideEffects:["Minimal histamine release","Most common NMBA implicated in perioperative anaphylaxis"],
+ contraindications:["Known rocuronium/aminosteroid hypersensitivity"],
+ pearls:["With sugammadex available, offers an RSI alternative to succinylcholine with reliable, rapid reversal"],
+ alerts:["If reversal is required emergently after an RSI dose, sugammadex 16 mg/kg is needed for prompt reversal"]},
+
+{id:"vecuronium", name:"Vecuronium", cls:"nmb",
+ moa:"Non-depolarizing competitive nicotinic antagonist (aminosteroid).",
+ onset:"2–3 min", peak:"~3–5 min", duration:"30–45 min (intermediate)", halflife:"~50–80 min",
+ onsetMin:2.5, durationMin:37,
+ metabolism:"Hepatic; active metabolite (3-desacetylvecuronium) can prolong effect in renal/hepatic impairment",
+ dosing:[["Intubating dose","0.08–0.1 mg/kg"]],
+ sideEffects:["Minimal cardiovascular effect","Minimal histamine release"],
+ contraindications:["Caution in significant hepatic/renal impairment (prolonged block)"],
+ pearls:["Cardiovascularly quiet — useful where hemodynamic stability is prioritized"],
+ alerts:["Active metabolite can cause prolonged, unpredictable block in renal/hepatic failure or ICU infusion use"]},
+
+{id:"cisatracurium", name:"Cisatracurium", cls:"nmb",
+ moa:"Non-depolarizing competitive nicotinic antagonist (benzylisoquinolinium).",
+ onset:"2–3 min (slower)", peak:"~3–5 min", duration:"45–60 min", halflife:"~22–29 min",
+ onsetMin:2.5, durationMin:50,
+ metabolism:"Hofmann elimination — organ-independent spontaneous degradation at body pH/temperature",
+ dosing:[["Intubating dose","0.15–0.2 mg/kg"]],
+ sideEffects:["Minimal histamine release"],
+ contraindications:["None specific — well tolerated in organ failure"],
+ pearls:["Preferred agent in significant renal or hepatic failure due to organ-independent (Hofmann) elimination"],
+ alerts:[]},
+
+{id:"atracurium", name:"Atracurium", cls:"nmb",
+ moa:"Non-depolarizing competitive nicotinic antagonist (benzylisoquinolinium).",
+ onset:"2–3 min", peak:"~3–5 min", duration:"30–45 min", halflife:"~20 min",
+ onsetMin:2.5, durationMin:37,
+ metabolism:"Hofmann elimination + ester hydrolysis",
+ dosing:[["Intubating dose","0.4–0.5 mg/kg"]],
+ sideEffects:["More histamine release than cisatracurium — flushing, hypotension, bronchospasm","Laudanosine metabolite — theoretical CNS excitatory/seizure risk with high-dose prolonged infusion"],
+ contraindications:["Caution in asthma / histamine-sensitive states"],
+ pearls:["Organ-independent elimination like cisatracurium, but with a more prominent histamine-release profile"],
+ alerts:[]},
+
+{id:"pancuronium", name:"Pancuronium", cls:"nmb",
+ moa:"Long-acting non-depolarizing competitive nicotinic antagonist (aminosteroid); also blocks cardiac muscarinic receptors (vagolytic).",
+ onset:"3–5 min", peak:"~5 min", duration:"60–120 min (long)", halflife:"~1.7–2.5 hr",
+ onsetMin:4, durationMin:90,
+ metabolism:"Primarily renal excretion — prolonged in renal failure",
+ dosing:[["Intubating dose","0.08–0.1 mg/kg"]],
+ sideEffects:["Tachycardia (vagolytic)"],
+ contraindications:["Caution in renal failure (prolonged block)"],
+ pearls:["Rarely used now given long duration and tachycardia, but historically chosen in cardiac cases to offset opioid-induced bradycardia"],
+ alerts:[]},
+
+{id:"fentanyl", name:"Fentanyl", cls:"opioid",
+ moa:"Mu-opioid receptor agonist.",
+ onset:"1–2 min IV", peak:"~3–5 min", duration:"30–60 min (single dose)", halflife:"~3–4 hr (context-sensitive half-time rises with repeated/prolonged dosing)",
+ onsetMin:1.5, durationMin:45,
+ metabolism:"Hepatic CYP3A4",
+ dosing:[["Analgesia","1–3 mcg/kg IV"],["High-dose cardiac technique","up to 20–50 mcg/kg"]],
+ sideEffects:["Respiratory depression","Chest wall rigidity with rapid high-dose push","Bradycardia","PONV","Miosis"],
+ contraindications:["Caution with other CNS/respiratory depressants"],
+ pearls:["Intraoperative workhorse opioid — short duration at typical doses is due to redistribution, not metabolism"],
+ alerts:["Rapid high-dose IV push can cause chest wall rigidity ('wooden chest') impairing ventilation — may require neuromuscular blockade or naloxone"]},
+
+{id:"remifentanil", name:"Remifentanil", cls:"opioid",
+ moa:"Mu-opioid receptor agonist with a unique ester linkage.",
+ onset:"1–1.5 min", peak:"~1–2 min", duration:"5–10 min after stopping infusion", halflife:"Context-sensitive half-time ~3 min regardless of infusion duration",
+ onsetMin:1.25, durationMin:7,
+ metabolism:"Rapid hydrolysis by non-specific plasma and tissue esterases",
+ dosing:[["Infusion","0.05–2 mcg/kg/min"]],
+ sideEffects:["Bradycardia","Hypotension","Acute opioid tolerance/hyperalgesia with prolonged high-dose use"],
+ contraindications:["None absolute; plan transitional analgesia before discontinuation"],
+ pearls:["Ultra-short, non-accumulating — ideal when rapid neurologic wake-up assessment is needed (e.g., neurosurgery)"],
+ alerts:["Abrupt discontinuation without a transitional analgesic plan can cause severe acute pain / hyperalgesia"]},
+
+{id:"sufentanil", name:"Sufentanil", cls:"opioid",
+ moa:"Mu-opioid receptor agonist, highly lipophilic.",
+ onset:"1–3 min", peak:"~3–5 min", duration:"20–45 min", halflife:"~2.5 hr",
+ onsetMin:2, durationMin:32,
+ metabolism:"Hepatic CYP3A4",
+ dosing:[["Analgesia","0.1–0.5 mcg/kg IV"]],
+ sideEffects:["Similar to fentanyl: respiratory depression, bradycardia, rigidity with rapid push"],
+ contraindications:["Caution with other CNS/respiratory depressants"],
+ pearls:["~5–10× more potent than fentanyl — used in cardiac and neuraxial anesthesia in small volumes"],
+ alerts:[]},
+
+{id:"alfentanil", name:"Alfentanil", cls:"opioid",
+ moa:"Mu-opioid receptor agonist; low lipid solubility but a high non-ionized fraction at physiologic pH gives very rapid onset.",
+ onset:"~1 min (fastest of the fentanyls)", peak:"~1.5 min", duration:"10–20 min", halflife:"~1.5–2 hr",
+ onsetMin:1, durationMin:15,
+ metabolism:"Hepatic CYP3A4",
+ dosing:[["Brief procedure analgesia","10–20 mcg/kg IV"]],
+ sideEffects:["Respiratory depression","Bradycardia"],
+ contraindications:["Caution with other CNS/respiratory depressants"],
+ pearls:["Favored for very brief stimulating procedures given its rapid onset and short duration"],
+ alerts:[]},
+
+{id:"morphine", name:"Morphine", cls:"opioid",
+ moa:"Mu-opioid receptor agonist, comparatively low lipophilicity.",
+ onset:"15–30 min IV", peak:"~20 min", duration:"3–4 hr", halflife:"~2–4 hr",
+ onsetMin:20, durationMin:210,
+ metabolism:"Hepatic glucuronidation → active metabolite morphine-6-glucuronide (renally cleared — accumulates in renal failure)",
+ dosing:[["Postoperative analgesia","0.05–0.1 mg/kg IV"]],
+ sideEffects:["Histamine release (flushing, hypotension, pruritus)","Respiratory depression","Biliary spasm"],
+ contraindications:["Caution/dose-reduce in renal failure (active metabolite accumulation)"],
+ pearls:["Mainstay for postoperative analgesia given its longer duration relative to fentanyl"],
+ alerts:["Active metabolite (M6G) accumulates in renal impairment — risk of delayed, prolonged sedation and respiratory depression"]},
+
+{id:"lidocaine", name:"Lidocaine", cls:"local",
+ moa:"Amide local anesthetic — blocks voltage-gated sodium channels, preventing axonal depolarization and conduction.",
+ onset:"Fast, 2–5 min", peak:"—", duration:"1–2 hr (without epinephrine)", halflife:"~1.5–2 hr",
+ onsetMin:3, durationMin:90,
+ metabolism:"Hepatic (amide class — hepatic CYP metabolism)",
+ dosing:[["Infiltration max (plain)","4.5 mg/kg"],["With epinephrine","7 mg/kg"],["IV bolus (antiarrhythmic/analgesic adjunct)","1–1.5 mg/kg"]],
+ sideEffects:["Perioral numbness, tinnitus, metallic taste (early LAST signs)","Seizures, cardiac arrhythmia/arrest (severe LAST)"],
+ contraindications:["Known amide-LA allergy (rare — true allergy usually to preservatives)"],
+ pearls:["Also used systemically as an IV infusion adjunct for postoperative analgesia/ileus reduction and as an antiarrhythmic"],
+ alerts:["Local anesthetic systemic toxicity (LAST): early neurologic symptoms progressing to seizures and cardiovascular collapse — have lipid emulsion therapy available"]},
+
+{id:"bupivacaine", name:"Bupivacaine", cls:"local",
+ moa:"Amide local anesthetic — sodium channel blockade; highly lipophilic and highly protein bound, giving long duration.",
+ onset:"Slower, 5–10 min", peak:"—", duration:"4–8 hr (longer with epinephrine)", halflife:"~3.5 hr",
+ onsetMin:7, durationMin:360,
+ metabolism:"Hepatic",
+ dosing:[["Max dose (plain)","2.5 mg/kg"],["Max with epinephrine","3 mg/kg"]],
+ sideEffects:["Cardiotoxicity disproportionate to CNS toxicity if injected intravascularly (higher risk than lidocaine)"],
+ contraindications:["Avoid IV regional anesthesia (Bier block) due to cardiotoxicity risk"],
+ pearls:["Long duration makes it a mainstay for postoperative nerve blocks and neuraxial anesthesia/analgesia"],
+ alerts:["More cardiotoxic than lidocaine per mg if inadvertent intravascular injection occurs — meticulous aspiration and incremental dosing required"]},
+
+{id:"ropivacaine", name:"Ropivacaine", cls:"local",
+ moa:"Amide local anesthetic, single enantiomer (S-enantiomer) — sodium channel blockade with a better safety margin than bupivacaine.",
+ onset:"5–10 min", peak:"—", duration:"4–6 hr", halflife:"~1.8 hr",
+ onsetMin:7, durationMin:300,
+ metabolism:"Hepatic",
+ dosing:[["Max dose","3 mg/kg"]],
+ sideEffects:["Lower cardiotoxicity potential than bupivacaine at equivalent doses","Some motor-sparing at lower concentrations"],
+ contraindications:["Known amide-LA hypersensitivity"],
+ pearls:["Favored where a wider cardiac safety margin and differential sensory-over-motor block are desired (e.g., labor epidurals)"],
+ alerts:[]},
+
+{id:"neostigmine", name:"Neostigmine", cls:"reversal",
+ moa:"Acetylcholinesterase inhibitor — increases synaptic ACh to competitively out-compete non-depolarizing NMBAs at the neuromuscular junction.",
+ onset:"5–10 min", peak:"~10 min", duration:"~1 hr", halflife:"~50–90 min",
+ onsetMin:7, durationMin:60,
+ metabolism:"Hepatic + renal excretion",
+ dosing:[["Reversal","0.04–0.07 mg/kg (max ~5 mg), paired with glycopyrrolate 0.2 mg per 1 mg neostigmine"]],
+ sideEffects:["Bradycardia, salivation, bronchospasm, GI hypermotility (muscarinic effects) — mitigated by co-administered antimuscarinic"],
+ contraindications:["Avoid in deep block with no spontaneous twitches (ineffective/ceiling effect)"],
+ pearls:["Requires objective train-of-four monitoring before dosing to confirm adequate spontaneous recovery is present"],
+ alerts:["Ineffective — and can paradoxically worsen apparent recovery — if given during very deep block"]},
+
+{id:"sugammadex", name:"Sugammadex", cls:"reversal",
+ moa:"Modified gamma-cyclodextrin that encapsulates aminosteroid NMBAs (rocuronium, vecuronium) molecule-for-molecule, forming an inactive complex.",
+ onset:"2–3 min (rapid, even from deep block)", peak:"—", duration:"Complete reversal", halflife:"~2 hr (renally excreted complex)",
+ onsetMin:2.5, durationMin:0,
+ metabolism:"Not metabolized; renally excreted as the sugammadex-rocuronium complex",
+ dosing:[["Moderate block","2 mg/kg"],["Deep block","4 mg/kg"],["Immediate reversal post-RSI rocuronium","16 mg/kg"]],
+ sideEffects:["Bradycardia","Rare anaphylaxis","Mild transient effect on coagulation parameters","Reduces efficacy of hormonal contraceptives — patient counseling advised"],
+ contraindications:["Not effective for benzylisoquinolinium NMBAs (cisatracurium, atracurium)","Relative caution in severe renal impairment"],
+ pearls:["Enables rapid, complete reversal even of deep rocuronium/vecuronium block — supports rocuronium-based RSI with a reliable reversal strategy"],
+ alerts:[]},
+
+{id:"naloxone", name:"Naloxone", cls:"reversal",
+ moa:"Competitive mu-opioid receptor antagonist.",
+ onset:"1–2 min IV", peak:"~5 min", duration:"30–90 min", halflife:"~1–1.5 hr",
+ onsetMin:1.5, durationMin:60,
+ metabolism:"Hepatic glucuronidation",
+ dosing:[["Titrated reversal","0.04–0.1 mg increments IV"],["Cardiac arrest / full reversal","0.4 mg"]],
+ sideEffects:["Acute opioid withdrawal in dependent patients","Severe pain, sympathetic surge, pulmonary edema if given too rapidly"],
+ contraindications:["Use cautiously in opioid-dependent patients — titrate rather than bolus when possible"],
+ pearls:["Titrate in small increments to reverse respiratory depression while preserving some analgesia"],
+ alerts:["Duration is shorter than most opioids being reversed (especially methadone, morphine, sustained-release formulations) — renarcotization risk requires ongoing monitoring/redosing"]},
+
+{id:"flumazenil", name:"Flumazenil", cls:"reversal",
+ moa:"Competitive benzodiazepine receptor antagonist.",
+ onset:"1–2 min", peak:"~3 min", duration:"30–60 min (shorter than most benzodiazepines)", halflife:"~50 min",
+ onsetMin:1.5, durationMin:45,
+ metabolism:"Hepatic",
+ dosing:[["Reversal","0.2 mg increments IV, up to 1 mg total"]],
+ sideEffects:["Resedation as flumazenil wears off before the benzodiazepine"],
+ contraindications:["Chronic benzodiazepine use / mixed overdose with pro-convulsant co-ingestants (e.g., tricyclics)"],
+ pearls:["Useful for isolated benzodiazepine over-sedation in benzodiazepine-naive patients"],
+ alerts:["Can precipitate seizures in chronic benzodiazepine users or mixed overdoses — use with caution outside straightforward iatrogenic over-sedation"]},
+
+{id:"dexmedetomidine", name:"Dexmedetomidine", cls:"adjunct",
+ moa:"Selective central alpha-2 adrenergic agonist — produces sedation, analgesia, and sympatholysis largely without respiratory depression.",
+ onset:"5–10 min (loading infusion)", peak:"~10–15 min", duration:"Titrated infusion", halflife:"~2–3 hr",
+ onsetMin:7, durationMin:0,
+ metabolism:"Hepatic",
+ dosing:[["Loading dose","1 mcg/kg over 10 min"],["Maintenance infusion","0.2–0.7 mcg/kg/hr"]],
+ sideEffects:["Bradycardia","Hypotension (or transient hypertension with rapid loading dose)"],
+ contraindications:["Caution in cardiac conduction disease — avoid rapid bolus loading"],
+ pearls:["Unique among sedatives for producing 'cooperative sedation' — patient is calm but arousable, without significant respiratory depression","Useful for awake fiberoptic intubation and MAC sedation, and is opioid-sparing"],
+ alerts:["Rapid bolus loading risks significant bradycardia/hypotension — infuse slowly, especially with conduction disease"]},
+
+{id:"atropine", name:"Atropine / Glycopyrrolate", cls:"adjunct",
+ moa:"Antimuscarinic (anticholinergic) agents blocking muscarinic ACh receptors. Atropine crosses the blood–brain barrier; glycopyrrolate does not.",
+ onset:"1–2 min IV", peak:"~2–4 min", duration:"Atropine ~30–60 min; glycopyrrolate longer, ~1–2 hr", halflife:"Atropine ~2–3 hr; glycopyrrolate ~1.5 hr",
+ onsetMin:1.5, durationMin:60,
+ metabolism:"Hepatic/renal",
+ dosing:[["Atropine (bradycardia)","0.4–1 mg IV"],["Glycopyrrolate (with neostigmine)","0.2 mg per 1 mg neostigmine"]],
+ sideEffects:["Tachycardia","Dry mouth","Mydriasis","Urinary retention"],
+ contraindications:["Caution in narrow-angle glaucoma","Caution in tachyarrhythmias"],
+ pearls:["Atropine's CNS penetration makes it the ACLS choice for bradycardia; glycopyrrolate's peripheral-only action and antisialagogue effect make it the standard pairing with neostigmine"],
+ alerts:[]},
+
+{id:"ondansetron", name:"Ondansetron", cls:"adjunct",
+ moa:"Selective 5-HT3 (serotonin) receptor antagonist, central and peripheral — antiemetic.",
+ onset:"~30 min", peak:"~1 hr", duration:"6–8 hr", halflife:"~3–4 hr",
+ onsetMin:30, durationMin:420,
+ metabolism:"Hepatic CYP3A4/1A2/2D6",
+ dosing:[["PONV prophylaxis/treatment","4 mg IV"]],
+ sideEffects:["QT prolongation (dose-related)","Headache","Constipation"],
+ contraindications:["Caution with congenital long QT syndrome or QT-prolonging co-medications"],
+ pearls:["Timing near the end of the case is standard for PONV prophylaxis"],
+ alerts:[]},
+
+{id:"dexamethasone", name:"Dexamethasone", cls:"adjunct",
+ moa:"Corticosteroid — antiemetic effect (mechanism not fully defined, possibly central) plus anti-inflammatory/analgesic adjunct benefit.",
+ onset:"Delayed, ~2 hr", peak:"—", duration:"12–24 hr+ (antiemetic effect)", halflife:"~36–54 hr (biologic)",
+ onsetMin:120, durationMin:1080,
+ metabolism:"Hepatic",
+ dosing:[["PONV prophylaxis","4–10 mg IV at induction"]],
+ sideEffects:["Hyperglycemia","Rare perineal itching/burning with rapid IV push"],
+ contraindications:["Caution in poorly controlled diabetes"],
+ pearls:["Best given at induction given its delayed onset of antiemetic action (~2 hr)"],
+ alerts:[]},
+
+{id:"ketorolac", name:"Ketorolac", cls:"adjunct",
+ moa:"Non-selective COX-1/COX-2 inhibitor (NSAID) — non-opioid analgesic.",
+ onset:"~10 min", peak:"~1–2 hr", duration:"4–6 hr", halflife:"~5 hr",
+ onsetMin:10, durationMin:300,
+ metabolism:"Hepatic + renal excretion",
+ dosing:[["Analgesia","15–30 mg IV"]],
+ sideEffects:["Platelet inhibition/bleeding risk","Renal impairment risk","GI ulceration risk"],
+ contraindications:["Renal impairment","Active or high-risk bleeding","Avoid in surgeries with high bleeding consequence (e.g., some neuro/ENT procedures)"],
+ pearls:["Valuable opioid-sparing analgesic adjunct as part of multimodal analgesia"],
+ alerts:["Platelet inhibition — confirm surgical bleeding risk tolerance before use"]},
+
+{id:"magnesium", name:"Magnesium Sulfate", cls:"adjunct",
+ moa:"NMDA receptor antagonism and voltage-gated calcium channel blockade.",
+ onset:"Several minutes (loading infusion)", peak:"—", duration:"Titrated infusion", halflife:"~4 hr (renal excretion)",
+ onsetMin:5, durationMin:0,
+ metabolism:"Renal excretion, unmetabolized",
+ dosing:[["Analgesic/NMB-sparing adjunct","30–50 mg/kg loading, then infusion"]],
+ sideEffects:["Hypotension","Potentiates neuromuscular blockade","Loss of deep tendon reflexes (early toxicity sign)"],
+ contraindications:["Caution in renal impairment (accumulation/toxicity)","Caution with concurrent NMBAs (potentiation)"],
+ pearls:["Reduces NMBA and opioid requirement; also used as an antiarrhythmic and anticonvulsant (e.g., preeclampsia)"],
+ alerts:["Potentiates neuromuscular blockade — anticipate prolonged block with concurrent NMBAs"]},
+];
+
+function accentFor(cls){ return CLASSES[cls].color; }
+
+function pkBarHTML(d, accent){
+  if(d.durationMin===0 && d.bloodGas!==undefined){
+    const pct = Math.max(4, Math.min(96, 100 - ((d.bloodGas-0.4)/(1.5-0.4))*100));
+    return `<div class="pk-strip">
+      <div class="pk-track"><div class="pk-fill" style="left:0;width:${pct}%;background:${accent};opacity:0.6"></div></div>
+      <div class="pk-labels"><span>fast offset</span><b>blood:gas ${d.bloodGas}</b><span>slow offset</span></div>
+    </div>`;
+  }
+  if(d.durationMin===0){
+    return `<div class="pk-strip">
+      <div class="pk-track"><div class="pk-fill" style="left:0;width:70%;background:${accent};opacity:0.5"></div></div>
+      <div class="pk-labels"><span>onset ${d.onset}</span><b>titrated infusion</b><span>—</span></div>
+    </div>`;
+  }
+  const total = d.onsetMin + d.durationMin;
+  const onsetPct = Math.max(2, (d.onsetMin/total)*100);
+  return `<div class="pk-strip">
+    <div class="pk-track">
+      <div class="pk-onset" style="width:${onsetPct}%"></div>
+      <div class="pk-fill" style="left:${onsetPct}%;width:${100-onsetPct}%;background:${accent}"></div>
+    </div>
+    <div class="pk-labels"><span>onset ${d.onset}</span><b>duration ${d.duration}</b></div>
+  </div>`;
+}
+
+function cardHTML(d){
+  const accent = accentFor(d.cls);
+  const hasPearl = d.pearls && d.pearls.length;
+  const hasAlert = d.alerts && d.alerts.length;
+  return `<div class="card" style="--accent:${accent}" data-id="${d.id}">
+    <div class="card-top">
+      <div>
+        <div class="card-name">${d.name}</div>
+        <div class="card-class" style="color:${accent}">${CLASSES[d.cls].label}</div>
+      </div>
+      <div class="badge-row">
+        ${hasPearl?'<span class="badge pearl">PEARL</span>':''}
+        ${hasAlert?'<span class="badge alert">ALERT</span>':''}
+      </div>
+    </div>
+    ${pkBarHTML(d, accent)}
+    <div class="card-facts">
+      <div><b>${d.halflife.split(';')[0].split('(')[0].trim()}</b>half-life</div>
+      <div><b>${d.metabolism.split(' ')[0]}</b>clearance</div>
+    </div>
+  </div>`;
+}
+
+function modalHTML(d){
+  const accent = accentFor(d.cls);
+  const section = (title,val,cls='') => val ? `<div class="modal-section ${cls}"><h4>${title}</h4><p>${val}</p></div>` : '';
+  const listSection = (title,arr,cls='') => (arr && arr.length) ? `<div class="modal-section ${cls}"><h4>${title}</h4><ul>${arr.map(x=>`<li>${x}</li>`).join('')}</ul></div>` : '';
+  return `
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-header"><div class="modal-dot" style="background:${accent}"></div><div class="modal-name">${d.name}</div></div>
+    <div class="modal-class" style="color:${accent}">${CLASSES[d.cls].label}</div>
+    ${pkBarHTML(d, accent)}
+    <div class="modal-pk">
+      <div><div class="lbl">Onset</div><div class="val">${d.onset}</div></div>
+      <div><div class="lbl">${d.durationMin!==0?'Duration':(d.mac?'MAC':'Peak')}</div><div class="val">${d.durationMin!==0?d.duration:(d.mac||d.peak)}</div></div>
+      <div><div class="lbl">Half-life</div><div class="val">${d.halflife}</div></div>
+      <div><div class="lbl">Clearance</div><div class="val">${d.metabolism.split('—')[0].split('(')[0].trim()}</div></div>
+    </div>
+    ${section('Mechanism of Action', d.moa)}
+    ${d.dosing && d.dosing.length ? `<div class="modal-section"><h4>Dosing</h4><ul>${d.dosing.map(([k,v])=>`<li><b>${k}:</b> ${v}</li>`).join('')}</ul></div>` : ''}
+    ${listSection('Side Effects', d.sideEffects)}
+    ${listSection('Contraindications / Cautions', d.contraindications, 'contra')}
+    ${listSection('Clinical Pearls', d.pearls, 'pearl')}
+    ${listSection('Alerts', d.alerts, 'alert')}
+  `;
+}
+
+let activeChannel = 'all';
+let searchTerm = '';
+
+function buildChannels(){
+  const wrap = document.getElementById('channels');
+  const allBtn = `<div class="channel-btn active" data-cls="all" style="color:var(--text-primary)"><span class="dot" style="background:var(--grey)"></span>All<span class="channel-count">${DRUGS.length}</span></div>`;
+  const btns = Object.entries(CLASSES).map(([key,val])=>{
+    const count = DRUGS.filter(d=>d.cls===key).length;
+    return `<div class="channel-btn" data-cls="${key}" style="color:${val.color}"><span class="dot" style="background:${val.color}"></span>${val.label}<span class="channel-count">${count}</span></div>`;
+  }).join('');
+  wrap.innerHTML = allBtn + btns;
+  wrap.querySelectorAll('.channel-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeChannel = btn.dataset.cls;
+      wrap.querySelectorAll('.channel-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    });
+  });
+}
+
+function filterDrugs(){
+  return DRUGS.filter(d=>{
+    if(activeChannel!=='all' && d.cls!==activeChannel) return false;
+    if(!searchTerm) return true;
+    const hay = [d.name, d.moa, ...(d.sideEffects||[]), ...(d.pearls||[]), ...(d.alerts||[]), CLASSES[d.cls].label].join(' ').toLowerCase();
+    return hay.includes(searchTerm);
+  });
+}
+
+function render(){
+  const list = filterDrugs();
+  const view = document.getElementById('cardsView');
+  if(list.length===0){
+    view.innerHTML = `<div class="empty">No agents match — try another term or channel.</div>`;
+    return;
+  }
+  if(activeChannel==='all'){
+    let html = '';
+    Object.entries(CLASSES).forEach(([key,val])=>{
+      const items = list.filter(d=>d.cls===key);
+      if(!items.length) return;
+      html += `<div class="section-label" style="color:${val.color}">${val.label}</div><div class="grid">${items.map(cardHTML).join('')}</div>`;
+    });
+    view.innerHTML = html;
+  } else {
+    view.innerHTML = `<div class="grid">${list.map(cardHTML).join('')}</div>`;
+  }
+  view.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('click', ()=>openModal(card.dataset.id));
+  });
+}
+
+function openModal(id){
+  const d = DRUGS.find(x=>x.id===id);
+  document.getElementById('modalContent').innerHTML = modalHTML(d);
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+}
+document.getElementById('overlay').addEventListener('click', e=>{
+  if(e.target.id==='overlay') closeModal();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+
+document.getElementById('search').addEventListener('input', e=>{
+  searchTerm = e.target.value.trim().toLowerCase();
+  render();
+});
+
+function buildCompare(){
+  const wrap = document.getElementById('compareView');
+  let html = '';
+  Object.entries(CLASSES).forEach(([key,val])=>{
+    const items = DRUGS.filter(d=>d.cls===key);
+    if(!items.length) return;
+    html += `<div class="compare-group">
+      <div class="compare-title" style="color:${val.color}">${val.label}</div>
+      <table class="cmp"><thead><tr><th>Agent</th><th>Onset</th><th>Duration</th><th>Key distinguishing feature</th></tr></thead><tbody>
+      ${items.map(d=>`<tr><td class="name">${d.name}</td><td>${d.onset}</td><td>${d.durationMin!==0?d.duration:(d.mac?('MAC '+d.mac):'titrated')}</td><td>${(d.pearls&&d.pearls[0])||(d.alerts&&d.alerts[0])||''}</td></tr>`).join('')}
+      </tbody></table>
+    </div>`;
+  });
+  wrap.innerHTML = html;
+}
+
+document.getElementById('btn-cards').addEventListener('click', ()=>{
+  document.getElementById('btn-cards').classList.add('active');
+  document.getElementById('btn-compare').classList.remove('active');
+  document.getElementById('cardsView').style.display='block';
+  document.getElementById('compareView').classList.remove('open');
+});
+document.getElementById('btn-compare').addEventListener('click', ()=>{
+  document.getElementById('btn-compare').classList.add('active');
+  document.getElementById('btn-cards').classList.remove('active');
+  document.getElementById('cardsView').style.display='none';
+  document.getElementById('compareView').classList.add('open');
+});
+
+buildChannels();
+buildCompare();
+render();
+</script>
+</body>
+</html>
